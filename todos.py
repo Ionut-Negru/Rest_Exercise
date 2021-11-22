@@ -1,25 +1,38 @@
 import datetime
+from rest_test import *
 
-
-class ToDo:
+class ToDo(Rest):
     
     def __init__(self):
-        self.id = None
-        self.user_id = None
-        self.title = None
-        self.due_on = None
-        self.status = None
+        super().__init__()
+        self.meta = {}
+        self.todos = []
         
-    def get_data_from_json(self, json_text={}):
-        self.id = json_text['id']
-        self.user_id = json_text['user_id']
-        self.title = json_text['title']
-        self.due_on = datetime.datetime.strptime(json_text['due_on'],"%Y-%m-%dT%H:%M:%S.%f%z")
-        self.status = json_text['status']
-        return self
+    def get_to_do_from_json(self, json_text={}):
+        entry = {}
+        entry['id'] = json_text['id']
+        entry['user_id'] = json_text['user_id']
+        entry['title'] = json_text['title']
+        entry['due_on'] = datetime.datetime.strptime(json_text['due_on'],"%Y-%m-%dT%H:%M:%S.%f%z")
+        entry['status'] = json_text['status']
+        return entry
         
-    def __repr__(self):
-        return f'Id: {self.id}\nUser id: {self.user_id}\nTitle: {self.title}\nDue on: {self.due_on}\nStatus: {self.status}'
+    def parse_json(self, json=''):
+        self.todos = []
+        self.get_meta_data(json['meta']['pagination'])
+        for user in json['data']:
+            self.todos.append(self.get_to_do_from_json(user))
+        return self.todos
+        
+    def get_data(self):
+        self.todos.clear()
+        aux = self.get_url_string('todos')
+        response = requests.get(aux, verify=False)
+        return self.parse_json(response.json())
+        
+    def get_to_do_string(self, entry):
+        return f'Id: {entry["id"]}\nUser id: {entry["user_id"]}\nTitle: {entry["title"]}\nDue on: {entry["due_on"].strftime("%d-%m-%Y, %H:%M:%S, %Z")}\nStatus: {entry["status"]}'
     
-    def __str__(self):
-        return self.__repr__()
+    def get_sorted_to_dos(self, number_of_to_dos=1, field_by_sort='', reversed=False):
+        todos = self.get_entries("todos", number_of_to_dos)
+        return sorted(todos, key= lambda x: x[field_by_sort], reverse = reversed)

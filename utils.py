@@ -1,73 +1,97 @@
-import json
-from users import User
 from posts import Post
 from comments import Comment
 from todos import ToDo
+from users import User
 
-class DataWrapper:
+def ex1():
+    """
+        GET pentru fiecare tip de date
+        Metodele get_data returneaza o lista de dictionare ce contin tipurile de date
+    """
+    posts = Post().get_data()
+    comments = Comment().get_data()
+    to_dos = ToDo().get_data()
+    users = User().get_data()
     
-    def __init__(self):
-        self.current_data = None
-        self.total_entries = None
-        self.total_pages = None
-        self.current_page = None
-        self.entries_on_page = None
-        self.previous_page = None
-        self.next_page = None
+    # Printarea tipurilor de date
+    for post in posts:
+        print(Post().get_post_string(post)) 
+        print('*'*20)
+    for comment in comments:
+        print(Comment().get_comment_string(comment))
+        print('*'*20)
+    for to_do in to_dos:
+        print(ToDo().get_to_do_string(to_do))
+        print('*'*20)
+    for user in users:
+        print(User().get_user_string(user))
+        print('*'*20)
+        
+def ex2_and_ex3():
+    """
+        Adauga un nou user si afiseaza datele acestuia
+        Un decorator al metodei get_user_string verifica daca numarul de user a crescut
+    """
+    users = User()
+    new_user = users.add_new_user('Negru Ionut', 'example_email@test.com', 'male', 'active')
+    print(User().get_user_string(new_user))
+        
+def ex4():
+    """
+        Gaseste id-ul unui user pe baza numelui
+    """
+    users = User()
+    found_user = users.find_user_by_name('Negru Ionut')
+    print(found_user[0]['id'])
     
-    def get_meta_data(self,json_text={}):
-        pagination = json_text['meta']['pagination']
-        self.total_entries = pagination['total']
-        self.total_pages = pagination['pages']
-        self.current_page = pagination['page']
-        self.entries_on_page = pagination['limit']
-        self.previous_page = pagination['links']['previous']
-        self.next_page = pagination['links']['next']
-        
-    def get_users(self, json_text={}):
-        self.current_data = 'users'        
-        self.get_meta_data(json_text)
-        self.data = []
-        for aux in json_text['data']:
-            self.data.append(User().get_data_from_json(aux))
-            
-        return self.data
-        
-    def get_posts(self, json_text={}):
-        self.current_data = 'posts'
-        self.get_meta_data(json_text)
-        self.data = []
-        for aux in json_text['data']:
-            self.data.append(Post().get_data_from_json(aux))
-        
-        return self.data
+def ex5():
+    """
+        Identifica primii 20 de useri
+    """
+    users = User()
+    found_users = users.get_number_of_users(20)
+    for user in found_users:
+        print(users.get_user_string(user))
+        print('*'*20)
     
-    def get_comments(self, json_text={}):
-        self.current_data = 'comments'
-        self.get_meta_data(json_text)
-        self.data = []
-        for aux in json_text['data']:
-            self.data.append(Comment().get_data_from_json(aux))
-        
-        return self.data
-            
-    def get_todos(self, json_text={}):
-        self.current_data = 'todos'
-        self.get_meta_data(json_text)
-        self.data = []
-        for aux in json_text['data']:
-            self.data.append(ToDo().get_data_from_json(aux))
-        
-        return self.data
+def ex6():
+    """
+        Identifica primii 5 useri ce au un al doilea prenume
+    """
+    users = User()
+    users_with_middle_name = users.find_users_with_middle_name(5)
+    for user in users_with_middle_name:
+        print(users.get_user_string(user))
+        print('*'*20)
+
+
+def ex8():
+    """
+        update user email
+    """
+
+    users = User()
+    current_data = users.find_user_by_id(30)
+    print(users.get_user_string(current_data[0]))
+    users.update_user(30, email='ceva_random@execise.com')
+    current_data = users.find_user_by_id(30)
+    print(users.get_user_string(current_data[0]))
     
-    def get_data(self, option='', json_text=''):
-        match option:
-            case 'users':
-                return self.get_users(json_text)
-            case 'posts':
-                return self.get_posts(json_text)
-            case 'comments':
-                return self.get_comments(json_text)
-            case 'todos':
-                return self.get_todos(json_text)
+def ex9():
+    """
+        Obtine primele 20 todos ordonate by due date
+    """
+    todos = ToDo()
+    sorted_to_dos = todos.get_sorted_to_dos(20,'due_on')
+    for todo in sorted_to_dos:
+        print(todos.get_to_do_string(todo))
+        print('*'*20)
     
+#ex1()
+#ex2_and_ex3()
+#ex4()
+#ex5()
+#ex6()
+
+#ex8()
+#ex9()

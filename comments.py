@@ -1,24 +1,35 @@
+from rest_test import *
 
-
-class Comment:
+class Comment(Rest):
     
     def __init__(self):
-        self.id = None
-        self.post_id = None
-        self.name = None
-        self.email = None
-        self.body = None
+        super().__init__()
+        self.meta = {}
+        self.comments = []
         
-    def get_data_from_json(self, json_text={}):
-        self.id = json_text['id']
-        self.post_id = json_text['post_id']
-        self.name = json_text['name']
-        self.email = json_text['email']
-        self.body = json_text['body']
-        return self
+    def get_comment_from_json(self, json_text={}):
+        entry = {}
+        entry['id'] = json_text['id']
+        entry['post_id'] = json_text['post_id']
+        entry['name'] = json_text['name']
+        entry['email'] = json_text['email']
+        entry['body'] = json_text['body']
+        return entry
     
-    def __repr__(self):
-        return f'Id: {self.id}\nPost Id: {self.post_id}\nName: {self.name}\nEmail: {self.email}\nBody :{self.body}'
+    def get_comment_string(self, entry={}):
+        return f'Id: {entry["id"]}\nPost Id: {entry["post_id"]}\nName: {entry["name"]}\nEmail: {entry["email"]}\nBody :{entry["body"]}'
     
-    def __str__(self):
-        return self.__repr__()
+    def parse_json(self, json=''):
+        self.comments = []
+        self.get_meta_data(json['meta']['pagination'])
+        for user in json['data']:
+            self.comments.append(self.get_comment_from_json(user))
+        return self.comments
+    
+    def get_data(self):
+        self.comments.clear()
+        aux = self.get_url_string('comments')
+        response = requests.get(aux, verify=False)
+        return self.parse_json(response.json())
+    
+    

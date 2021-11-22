@@ -1,28 +1,143 @@
-import json
+from rest_test import *
 
 
-
-class User:
+class User(Rest):
     
     def __init__(self):
-        self.id = None
-        self.name = None
-        self.email = None
-        self.gender = None
-        self.status = None
+        super().__init__()
+        self.meta = {}
+        self.users = []
         
-    def get_data_from_json(self, json_entry=[]):
-        self.id = json_entry['id']
-        self.name = json_entry['name']
-        self.email = json_entry['email']
-        self.gender = json_entry['gender']
-        self.status = json_entry['status']
-        return self
+    def get_user_from_json(self, json_entry=[]):
+        """
+            Getting the user data from the json entry
+            
+            @return
+            A dictionary with the user information
+            
+        """
+        entry = {}
+        entry['id'] = json_entry['id']
+        entry['name'] = json_entry['name']
+        entry['email'] = json_entry['email']
+        entry['gender'] = json_entry['gender']
+        entry['status'] = json_entry['status']
+        return entry
     
-    def __repr__(self):
-        return f'Id: {self.id}\nName: {self.name}\nEmail: {self.email}\nGender: {self.gender}\nStatus: {self.status}'
+    def parse_json(self, json=''):
+        self.users = []
+        self.get_meta_data(json['meta']['pagination'])
+        for user in json['data']:
+            self.users.append(self.get_user_from_json(user))
+        return self.users
     
-    def __str__(self):
-        return self.__repr__()
+    def get_data(self):
+        """
+            Perform a GET for the users
+            Extract the meta data from the response
+            Extract the users data from the response
+            @return
+                A list of users, each user is represented by a dictionary
+        """
+        self.users.clear()
+        aux = self.get_url_string('users')
+        response = requests.get(aux, verify=False)
+        return self.parse_json(response.json())
+        
+    def get_number_of_users(self, number_of_users=1):
+        """
+            Perform a GET for the users
+            Extract the first N users
+            @param number_of_users
+                The number of users to be extracted
+            @return
+                A list of users, each user is represented by a dictionary, the length is specified by the param 
+        """
+        return self.get_entries('users', number_of_users)
+        
     
+    def get_user_string(self, entry={}):
+        if entry != None:
+            return f'Id: {entry["id"]}\nName: {entry["name"]}\nEmail: {entry["email"]}\nGender: {entry["gender"]}\nStatus: {entry["status"]}'
+    
+    
+    def check_number_of_users_increased(func):
+        
+        def wrapper(*args, **kwargs):
+            previous_number_of_users = args[0].get_number_of_users()
+            user = func(*args,**kwargs)
+            current_number_of_users = args[0].get_number_of_users()
+            if previous_number_of_users < current_number_of_users:
+                return user
+            else:
+                return None
+        return wrapper
+            
+    @check_number_of_users_increased
+    def add_new_user(self, name='', email='', gender='', status=''):
+        if name == '':
+            return 'Failed to add new user. Name was empty'
+        if email == '':
+            return 'Failed to add new user. Email was empty'
+        if gender == '':
+            return 'Failed to add new user. Gender was empty'
+        if status == '':
+            return 'Failed to add new user. Status was empty'
+        
+        url = self.get_url_post_string('users', name=name, email=email, gender=gender, status=status)
+        response = requests.post(url, verify=False)
+        if response.status_code == 201:
+            print("Adding new user successfully done.")
+            return self.get_user_from_json(response.json()['data'])
+        else:
+            print("Failed adding a new user")
+        
+    def find_user_by_id(self, id=0):
+        url = f'{self.get_url_string("users")}id={id}'
+        response = requests.get(url, verify=False)
+        return self.parse_json(response.json())
+    
+    def find_user_by_name(self, name=''):
+        url = f'{self.get_url_string("users")}name={name}'
+        response = requests.get(url, verify= False)
+        return self.parse_json(response.json())
+    
+    def find_users_by_status(self, status='active', number_of_users=1):
+        url = f'{self.get_url_string("users")}status={status}'
+        result = []
+        while len(result) < number_of_users:
+            response = requests.get(url, verify=False)
+            users = self.parse_json(response.json())
+            for user in users:
+                if user['status'] == status:
+                    result.append(user)
+            url = f'{self.meta["next_page"]};status={status}'
+        self.users = result[0:number_of_users]
+        return self.users
+
+    def find_users_with_middle_name(self, number_of_users=1):
+        result = []
+        users = self.get_data()
+        while len(result) < number_of_users:
+            for user in users:
+                if len(user['name'].split()) > 2:
+                    result.append(user)
+            url = f'{self.meta["next_page"]}'
+            users = self.parse_json(requests.get(url, verify=False).json())
+        self.users = result[0:number_of_users]
+        return self.users
+    
+    def update_user(self, id=1, **kwargs):
+        entry = self.update_entry('users', id, **kwargs)
+        return self.get_user_from_json(entry)
+        
+    def add_new_post(self, user_id='', title='', body=''):
+        self.post_activity(user_id, 'posts' , title=title, body=body)
+        
+    def add_new_todo(self, user_id='', title='', due_date='', status='pending'):
+        self.post_activity(user_id, 'todos', title=title, due_on=due_date, status=status)
+        
+    def add_new_comment(self, user_id=1, post_id=1, body=''):
+        user = self.find_user_by_id(user_id)[0]
+        self.post_activity(post_id, 'comments', name=user['name'], email=user['email'], body=body)
     
