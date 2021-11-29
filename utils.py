@@ -15,16 +15,16 @@ def ex1():
     
     # Printarea tipurilor de date
     for post in posts:
-        print(Post().get_post_string(post)) 
+        print(Post().display_post(post)) 
         print('*'*20)
     for comment in comments:
-        print(Comment().get_comment_string(comment))
+        print(Comment().display_comment(comment))
         print('*'*20)
     for to_do in to_dos:
-        print(ToDo().get_to_do_string(to_do))
+        print(ToDo().display_to_do(to_do))
         print('*'*20)
     for user in users:
-        print(User().get_user_string(user))
+        print(User().display_user(user))
         print('*'*20)
         
 def ex2_and_ex3():
@@ -33,8 +33,8 @@ def ex2_and_ex3():
         Un decorator al metodei get_user_string verifica daca numarul de user a crescut
     """
     users = User()
-    new_user = users.add_new_user('Negru Ionut', 'example_email@test.com', 'male', 'active')
-    print(User().get_user_string(new_user))
+    new_user = users.add_new_user('Negru Ionut', 'mails_emails@test.com', 'male', 'active')
+    print(User().display_user(new_user))
         
 def ex4():
     """
@@ -51,7 +51,7 @@ def ex5():
     users = User()
     found_users = users.get_number_of_users(20)
     for user in found_users:
-        print(users.get_user_string(user))
+        print(users.display_user(user))
         print('*'*20)
     
 def ex6():
@@ -61,10 +61,22 @@ def ex6():
     users = User()
     users_with_middle_name = users.find_users_with_middle_name(5)
     for user in users_with_middle_name:
-        print(users.get_user_string(user))
+        print(users.display_user(user))
         print('*'*20)
 
-
+def ex7():
+    """
+        Adding a new post
+        Adding a new comment
+        Adding a new to do
+    """
+    posts = Post()
+    comments = Comment()
+    todos = ToDo()
+    posts.add_new_post(user_name='Negru Ionut', title='Un post nou', body='Cuvinte cheie')
+    comments.add_new_comment(post_title='Un post nou', body='Alte cuvinte cheie')
+    todos.add_new_to_do(user_name='Negru Ionut', title='To be done', status='pending')
+    
 def ex8():
     """
         update user email
@@ -72,19 +84,19 @@ def ex8():
 
     users = User()
     current_data = users.find_user_by_id(30)
-    print(users.get_user_string(current_data[0]))
+    print(users.display_user(current_data[0]))
     users.update_user(30, email='ceva_random@execise.com')
     current_data = users.find_user_by_id(30)
-    print(users.get_user_string(current_data[0]))
+    print(users.display_user(current_data[0]))
     
 def ex9():
     """
         Obtine primele 20 todos ordonate by due date
     """
     todos = ToDo()
-    sorted_to_dos = todos.get_sorted_to_dos(20,'due_on')
+    sorted_to_dos = todos.get_sorted_to_dos(20,'deadline')
     for todo in sorted_to_dos:
-        print(todos.get_to_do_string(todo))
+        print(todos.display_to_do(todo))
         print('*'*20)
     
 #ex1()
@@ -92,6 +104,6 @@ def ex9():
 #ex4()
 #ex5()
 #ex6()
-
+ex7()
 #ex8()
 #ex9()

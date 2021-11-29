@@ -1,4 +1,6 @@
 from rest_test import *
+from users import User
+
 
 class Post(Rest):
     
@@ -15,7 +17,7 @@ class Post(Rest):
         entry['body'] = json_text['body']
         return entry
     
-    def get_post_string(self, entry={}):
+    def display_post(self, entry={}):
         return f'Id: {entry["id"]}\nUser id: {entry["user_id"]}\nTitle: {entry["title"]}\nComment: {entry["body"]}'
     
     def parse_json(self, json=''):
@@ -31,4 +33,12 @@ class Post(Rest):
         response = requests.get(aux, verify=False)
         return self.parse_json(response.json())
 
+    def add_new_post(self, user_name='', title='', body=''):
+        user = User().find_user_by_name(user_name)[0]
+        self.post_activity(user['id'], 'posts' , title=title, body=body)
         
+    def find_post_by_title(self, title=''):
+        url = f'{self.get_url_string("posts")}title={title}'
+        response = requests.get(url, verify=False)
+        return self.parse_json(response.json())
+    

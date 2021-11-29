@@ -1,5 +1,7 @@
 import datetime
 from rest_test import *
+from users import User
+
 
 class ToDo(Rest):
     
@@ -7,7 +9,14 @@ class ToDo(Rest):
         super().__init__()
         self.meta = {}
         self.todos = []
-        
+        self.to_do_dict={
+            'to_do_id': 'id',
+            'user_id': 'user_id',
+            'to_do_title': 'title',
+            'deadline': 'due_on',
+            'to_do_status': 'status'
+            }
+                
     def get_to_do_from_json(self, json_text={}):
         entry = {}
         entry['id'] = json_text['id']
@@ -30,9 +39,13 @@ class ToDo(Rest):
         response = requests.get(aux, verify=False)
         return self.parse_json(response.json())
         
-    def get_to_do_string(self, entry):
+    def display_to_do(self, entry):
         return f'Id: {entry["id"]}\nUser id: {entry["user_id"]}\nTitle: {entry["title"]}\nDue on: {entry["due_on"].strftime("%d-%m-%Y, %H:%M:%S, %Z")}\nStatus: {entry["status"]}'
     
     def get_sorted_to_dos(self, number_of_to_dos=1, field_by_sort='', reversed=False):
         todos = self.get_entries("todos", number_of_to_dos)
-        return sorted(todos, key= lambda x: x[field_by_sort], reverse = reversed)
+        return sorted(todos, key= lambda x: x[self.to_do_dict[field_by_sort]], reverse = reversed)
+
+    def add_new_to_do(self, user_name='', title='', due_date='', status='pending'):
+        user = User().find_user_by_name(user_name)[0]
+        self.post_activity(user['id'], 'todos', title=title, due_on=due_date, status=status)

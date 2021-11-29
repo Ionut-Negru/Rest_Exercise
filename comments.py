@@ -1,4 +1,7 @@
 from rest_test import *
+from users import User
+from posts import Post
+
 
 class Comment(Rest):
     
@@ -16,7 +19,7 @@ class Comment(Rest):
         entry['body'] = json_text['body']
         return entry
     
-    def get_comment_string(self, entry={}):
+    def display_comment(self, entry={}):
         return f'Id: {entry["id"]}\nPost Id: {entry["post_id"]}\nName: {entry["name"]}\nEmail: {entry["email"]}\nBody :{entry["body"]}'
     
     def parse_json(self, json=''):
@@ -31,5 +34,10 @@ class Comment(Rest):
         aux = self.get_url_string('comments')
         response = requests.get(aux, verify=False)
         return self.parse_json(response.json())
+    
+    def add_new_comment(self, post_title='' ,body=''):
+        post = Post().find_post_by_title(post_title)[0]
+        user = User().find_user_by_id(post['user_id'])[0]
+        self.post_activity(post['id'], 'comments', name=user['name'], email=user['email'], body=body)
     
     

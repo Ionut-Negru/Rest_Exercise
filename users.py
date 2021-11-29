@@ -56,7 +56,7 @@ class User(Rest):
         return self.get_entries('users', number_of_users)
         
     
-    def get_user_string(self, entry={}):
+    def display_user(self, entry={}):
         if entry != None:
             return f'Id: {entry["id"]}\nName: {entry["name"]}\nEmail: {entry["email"]}\nGender: {entry["gender"]}\nStatus: {entry["status"]}'
     
@@ -64,9 +64,11 @@ class User(Rest):
     def check_number_of_users_increased(func):
         
         def wrapper(*args, **kwargs):
-            previous_number_of_users = args[0].get_number_of_users()
+            args[0].get_data()
+            previous_number_of_users = args[0].get_number_of_entries()
             user = func(*args,**kwargs)
-            current_number_of_users = args[0].get_number_of_users()
+            args[0].get_data()
+            current_number_of_users = args[0].get_number_of_entries()
             if previous_number_of_users < current_number_of_users:
                 return user
             else:
@@ -84,8 +86,9 @@ class User(Rest):
         if status == '':
             return 'Failed to add new user. Status was empty'
         
-        url = self.get_url_post_string('users', name=name, email=email, gender=gender, status=status)
-        response = requests.post(url, verify=False)
+        url = self.get_url_string('users')
+        payload = self.get_payload(name=name, email=email, gender=gender, status=status)
+        response = requests.post(url, payload, verify=False)
         if response.status_code == 201:
             print("Adding new user successfully done.")
             return self.get_user_from_json(response.json()['data'])
@@ -131,13 +134,4 @@ class User(Rest):
         entry = self.update_entry('users', id, **kwargs)
         return self.get_user_from_json(entry)
         
-    def add_new_post(self, user_id='', title='', body=''):
-        self.post_activity(user_id, 'posts' , title=title, body=body)
-        
-    def add_new_todo(self, user_id='', title='', due_date='', status='pending'):
-        self.post_activity(user_id, 'todos', title=title, due_on=due_date, status=status)
-        
-    def add_new_comment(self, user_id=1, post_id=1, body=''):
-        user = self.find_user_by_id(user_id)[0]
-        self.post_activity(post_id, 'comments', name=user['name'], email=user['email'], body=body)
     

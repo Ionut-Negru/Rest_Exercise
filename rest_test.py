@@ -13,25 +13,14 @@ class Rest:
             @param id: the id of the entry
             @return: the url string for the patch operation
         """
-        return f'{self.api_url}/public/v1/{option}/{id}?access-token={self.token};'
+        return f'{self.api_url}/public/v1/{option}/{id}?access-token={self.token}&'
     
     def get_url_string(self, option=''):
         """
             @param option: the type of data entry
             @return: the url string for the get operation
         """
-        return f'{self.api_url}/public/v1/{option}?access-token={self.token};'
-    
-    def get_url_post_string(self, option='', **kwargs):
-        """
-            @param option: the type of data entry
-            @param kwargs: the keyword arguments of the field that will be included in the post url
-            @return: the url string for the post operation
-        """
-        post_string = self.get_url_string(option)
-        for i in kwargs:
-            post_string = f'{post_string}{i}={kwargs[i]};'
-        return post_string
+        return f'{self.api_url}/public/v1/{option}?access-token={self.token}&'
     
     def get_meta_data(self, pagination = None):
         self.meta['total_entries'] = pagination['total']
@@ -58,7 +47,12 @@ class Rest:
         
         return total_entries[0:number_of_entries]
     
-    
+    def get_payload(self, **kwargs):
+        payload = {}
+        for i in kwargs:
+            payload[i] = kwargs[i]
+        return payload   
+            
     def get_number_of_entries(self):
         return self.meta['total_entries']
     
@@ -70,9 +64,7 @@ class Rest:
             example call update_entry('users', 2, gender=female)
         """
         url = self.get_url_patch_string(option, id)
-        for i in kwargs:
-            url = f'{url}{i}={kwargs[i]};'
-        response = requests.patch(url, verify=False)
+        response = requests.patch(url, json=self.get_payload(**kwargs), verify=False)
         if response.status_code == 200:
             print("Updated successfully")
             return response.json()['data']
@@ -89,11 +81,8 @@ class Rest:
         target = 'users'
         if activity == 'comments':
             target = 'posts'
-        url = f'{self.api_url}/public/v1/{target}/{id}/{activity}?access-token={self.token};'
-        for i in kwargs:
-            url = f'{url}{i}={kwargs[i]};'
-        print(url)
-        response = requests.post(url, verify=False)
+        url = f'{self.api_url}/public/v1/{target}/{id}/{activity}?access-token={self.token}&'
+        response = requests.post(url, json=self.get_payload(**kwargs), verify=False)
         if response.status_code == 201:
             print(f"Successfully added {activity}")
         else:
